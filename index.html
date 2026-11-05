@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Travel Packer">
+<title>Travel Packer</title>
+<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.png"><meta name="theme-color" content="#5f6b3a">
+<style>
+:root{--bg:#f6f0e2;--card:#fffaf0;--tx:#3a3a2c;--mu:#7a7761;--sage:#8a9a6b;--olive:#5f6b3a;--terra:#c4694a;--sand:#e6d8b8;--ln:#e2d6b8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#25261d;--card:#2f3024;--tx:#efe8d4;--mu:#aaa58c;--sand:#44442f;--ln:#44442f;--sage:#a3b383;--olive:#b5c27f}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+header{background:var(--olive);color:#fff;padding:14px 16px}header h1{margin:0;font-size:20px}
+main{padding:12px;max-width:640px;margin:auto}
+h2{font-size:17px;margin:18px 0 8px;color:var(--olive);display:flex;justify-content:space-between;align-items:center}
+.c{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.c b{display:block}small,.mu{color:var(--mu);font-size:13px}
+.btn{background:var(--terra);color:#fff;border:0;border-radius:10px;padding:8px 14px;font-size:15px}
+.btn.g{background:var(--sage)}.btn.o{background:none;color:var(--terra);border:1px solid var(--terra)}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;background:none;color:var(--mu);padding:8px 0;font-size:11px}nav button span{display:block;font-size:20px}nav button.on{color:var(--terra);font-weight:700}
+.bar{height:10px;background:var(--sand);border-radius:6px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:var(--sage)}.bar i.x{background:var(--terra)}
+.row{display:flex;justify-content:space-between;gap:8px}.tag{font-size:12px;border-radius:8px;padding:1px 7px;background:var(--sand)}.warn{color:var(--terra);font-weight:600}
+#m{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;z-index:9}
+#m>div{background:var(--bg);width:100%;max-height:92%;overflow:auto;border-radius:16px 16px 0 0;padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+label{display:block;font-size:13px;color:var(--mu);margin-top:8px}
+input,select,textarea{width:100%;font:inherit;padding:9px;border:1px solid var(--ln);border-radius:8px;background:var(--card);color:var(--tx)}
+#t{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--tx);color:var(--bg);padding:10px 14px;border-radius:10px;display:none;z-index:8}#t b{color:var(--sand);margin-left:10px;text-decoration:underline}
+.sub{border-top:1px solid var(--ln);padding:6px 0}h3{font-size:14px;margin:12px 0 4px;color:var(--olive)}.done{text-decoration:line-through;opacity:.6}.chk{display:flex;gap:10px;align-items:flex-start}.chk input{width:24px;height:24px;margin:0;flex:none}
+</style></head><body>
+<header style="display:flex;justify-content:space-between;align-items:center"><h1>🌿 Travel Packer</h1><button onclick="srch()" aria-label="Search" style="background:none;border:0;font-size:22px;color:#fff">🔍</button></header>
+<main id="v"></main>
+<nav id="n"></nav>
+<div id="t"></div>
+<div id="m"><div id="mb"></div></div>
+<script>
+var K="travelpacker.v1",TAB="home",D={dest:[],trans:[],stay:[],event:[],exp:[],task:[],opt:[],visa:[],info:[]},BUD=17000;
+var PAY=["Unpaid","Part paid","Paid"],BK=["Booked","Unbooked","Cancelled"];
+var TT=["Flight","Ferry/boat","Bus","Train","Taxi","Private transfer"],EC=["Festival/concert","Tour/excursion","Boat trip","Restaurant","Other"];
+var XC=["Food & drink","Shopping","Activities","Other"],TC=["Visas & entry","Documents","Health","Money & admin","Before leaving"];
+var S={
+dest:{t:"Destination",f:[["country","Country"],["name","Destination"],["arrive","Arrive","date"],["depart","Depart","date"],["notes","Notes","area"]]},
+trans:{t:"Journey",f:[["type","Type","sel",TT],["from","From"],["to","To"],["date","Date","date"],["dep","Departs","time"],["arr","Arrives","time"],["dur","Duration"],["provider","Provider"],["ref","Booking ref"],["link","Booking link"],["cost","Cost £","number"],["pay","Payment","sel",PAY],["paydate","Payment date","date"],["status","Status","sel",BK],["notes","Notes","area"]]},
+stay:{t:"Stay",f:[["name","Hotel / guesthouse"],["dest","Destination","dest"],["ref","Booking ref"],["link","Booking / confirmation link"],["in","Check-in","date"],["out","Check-out","date"],["cost","Total cost £","number"],["pay","Payment","sel",PAY],["paydate","Payment date","date"],["cancelBy","Cancel by","date"],["policy","Cancellation policy"],["notes","Notes","area"]]},
+event:{t:"Event",f:[["name","Event"],["cat","Category","sel",EC],["dest","Destination","dest"],["date","Date","date"],["start","Start","time"],["end","End","time"],["loc","Location"],["cost","Cost £","number"],["ref","Booking ref"],["link","Ticket link"],["pay","Payment","sel",PAY],["paydate","Payment date","date"],["notes","Notes","area"]]},
+exp:{t:"Expense",f:[["name","What for"],["cat","Category","sel",XC],["country","Country"],["date","Date","date"],["cost","Amount £","number"],["who","Who","sel",["Shared","Amy","Joe"]],["pay","Payment","sel",PAY],["notes","Notes","area"]]},
+task:{t:"Task",f:[["name","Task"],["cat","Category","sel",TC],["due","Due","date"],["dest","Country / destination"],["pri","Priority","sel",["Medium","High","Low"]],["who","Assigned to","sel",["Both","Amy","Joe"]],["link","Website / document link"],["notes","Notes","area"]]}};
+S.visa={t:"Visa / entry",f:[["country","Country"],["vtype","Type (visa, exemption...)"],["entry","Entry date","date"],["days","Days allowed","number"],["applied","Applied on","date"],["link","Link / document"],["notes","Notes (extension rules etc.)","area"]]};
+S.info={t:"Key info",f:[["title","Title (e.g. Insurance helpline)"],["cat","Category","sel",["Emergency contact","Insurance","Embassy","Medical","Other"]],["value","Number / detail"],["notes","Notes","area"]]};
+S.opt={t:"Travel option",f:[["dest","From (destination)","dest"],["to","To"],["type","Method","sel",TT.concat(["Speedboat","Sleeper train","Other"])],["dur","How long (e.g. 6h)"],["est","Estimated cost £","number"],["link","Link"],["notes","Notes","area"]]};
+var TI={info:r=>r.title||"Info",visa:r=>r.country||"Visa",opt:r=>(r.type||"Option")+" to "+(r.to||"?"),dest:r=>(r.name||"New destination")+(r.country?", "+r.country:""),trans:r=>(r.from||"?")+" → "+(r.to||"?"),stay:r=>r.name||"Stay",event:r=>r.name||"Event",exp:r=>r.name||"Expense",task:r=>r.name||"Task"};
+var SU={info:r=>[r.cat,r.value,r.notes].filter(Boolean).join(" · "),visa:r=>{var l=lb(r),dl=l?days(TODAY,l):null;return [r.vtype,r.entry&&"Entered "+fd(r.entry),r.days&&r.days+" days",l&&"Leave by "+fd(l),dl!=null&&(dl<0?"⚠️ past limit":dl<=10?"⚠️ "+dl+" days left":dl+" days left")].filter(Boolean).join(" · ")},opt:r=>[r.dur,r.est&&"est. "+m(r.est)].filter(Boolean).join(" · "),dest:r=>fd(r.arrive)+" – "+fd(r.depart)+(nn(r)?" · "+nn(r)+" nights":""),
+trans:r=>[r.type,fd(r.date),r.dep&&r.dep+(r.arr?"–"+r.arr:""),r.provider,r.status,r.cost&&m(r.cost)+" ("+(r.pay||"Unpaid")+")",r.ref&&"Ref "+r.ref].filter(Boolean).join(" · "),
+stay:r=>[r.dest,fd(r.in)+" – "+fd(r.out),sn(r)&&sn(r)+" nights",r.cost&&m(r.cost)+" ("+(r.pay||"Unpaid")+")",r.cancelBy&&"Cancel by "+fd(r.cancelBy),r.ref&&"Ref "+r.ref].filter(Boolean).join(" · "),
+event:r=>[r.cat,fd(r.date),r.start&&r.start+(r.end?"–"+r.end:""),r.loc,r.cost&&m(r.cost)+" ("+(r.pay||"Unpaid")+")"].filter(Boolean).join(" · "),
+exp:r=>[r.cat,fd(r.date),r.who,m(r.cost),r.pay].filter(Boolean).join(" · "),
+task:r=>[r.cat,r.due&&"Due "+fd(r.due),r.pri,r.who].filter(Boolean).join(" · ")};
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function m(n){return "£"+(+n||0).toLocaleString("en-GB",{maximumFractionDigits:0})}
+function fd(s){if(!s)return"";var d=new Date(s+"T12:00");return isNaN(d)?"":d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"2-digit"})}
+function days(a,b){return a&&b?Math.round((new Date(b+"T12:00")-new Date(a+"T12:00"))/864e5):0}
+function nn(r){return days(r.arrive,r.depart)}function sn(r){return days(r.in,r.out)}
+function ld(){var d=new Date();return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+var TODAY=ld(),UD=null,UT;
+function save(){try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}}
+function load(){try{var x=localStorage.getItem(K);if(x){D=Object.assign(D,JSON.parse(x));return}}catch(e){}
+var t=[["Check visa requirements for each country",0],["Check passport validity (6+ months)",0],["Check onward travel requirements",0],["Save passport copies",1],["Save insurance, flight and stay confirmations",1],["Download offline copies of key documents",1],["Complete travel vaccinations",2],["Arrange travel insurance",2],["Pack a first-aid kit",2],["Check prescription medication rules",2],["Set up shared travel banking",3],["Check cards work abroad / ATM fees",3],["Arrange eSIM or SIM plans",3],["Download useful travel apps",3],["Check baggage allowances",4],["Organise airport transfers",4],["Pack and check luggage",4],["Arrange home responsibilities",4],["Check all important bookings",4]];
+D.task=t.map((x,i)=>({id:"d"+i,name:x[0],cat:TC[x[1]],pri:"Medium",who:"Both"}));save()}
+function mig(){if(!D.del)D.del={};if(!D.nm){var mp={"Me":"Amy","Partner":"Joe"};D.exp.concat(D.task).forEach(function(r){if(mp[r.who])r.who=mp[r.who]});D.nm=1;save()}}
+function merge(x){var cs=["dest","trans","stay","event","exp","task","opt","visa","info"],dl=Object.assign({},D.del||{});Object.keys(x.del||{}).forEach(function(k){if(!(dl[k]>=x.del[k]))dl[k]=x.del[k]});
+cs.forEach(function(c){var mp={};(D[c]||[]).forEach(function(r){mp[r.id]=r});(x[c]||[]).forEach(function(r){var l=mp[r.id];if(!l||(r.u||0)>(l.u||0))mp[r.id]=r});D[c]=Object.keys(mp).map(function(k){return mp[k]}).filter(function(r){return !(dl[r.id]&&dl[r.id]>=(r.u||0))})});D.del=dl}
+function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function spendItems(){var a=[];D.trans.forEach(r=>{if(r.status!=="Cancelled")a.push({c:"Transport",n:r.cost,p:r.pay,ct:"Unassigned"})});
+D.stay.forEach(r=>a.push({c:"Accommodation",n:r.cost,p:r.pay,ct:cty(r.dest)}));
+D.event.forEach(r=>a.push({c:"Activities",n:r.cost,p:r.pay,ct:cty(r.dest)}));
+D.exp.forEach(r=>a.push({c:r.cat||"Other",n:r.cost,p:r.pay,ct:r.country||"Unassigned",w:r.who}));return a}
+function cty(d){var x=D.dest.find(r=>r.name===d);return x&&x.country||"Unassigned"}
+function sum(a){return a.reduce((s,x)=>s+(+x.n||0),0)}
+function grp(a,k){var o={};a.forEach(x=>o[x[k]]=(o[x[k]]||0)+(+x.n||0));return o}
+function bars(o,tot){return Object.keys(o).filter(k=>o[k]).map(k=>'<div class="row"><span>'+esc(k)+'</span><span>'+m(o[k])+'</span></div><div class="bar"><i style="width:'+Math.min(100,tot?o[k]/tot*100:0)+'%"></i></div>').join("")||'<small>Nothing yet</small>'}
+function card(k,r){var x='<div class="c" onclick="ed(\''+k+'\',\''+r.id+'\')"><b>'+esc(TI[k](r))+'</b><small>'+esc(SU[k](r))+'</small>';if(r.link)x+='<br><small><a href="'+esc(r.link)+'" target="_blank" onclick="event.stopPropagation()">Open link</a></small>';return x+'</div>'}
+function head(t,k){return '<h2>'+t+'<button class="btn" onclick="ed(\''+k+'\')">+ Add</button></h2>'}
+function srt(a,f){return a.slice().sort((x,y)=>(x[f]||"9").localeCompare(y[f]||"9"))}
+function upcoming(){var a=[];D.trans.forEach(r=>r.date>=TODAY&&r.status!=="Cancelled"&&a.push([r.date,"✈️ "+TI.trans(r),"trans",r.id]));D.stay.forEach(r=>r.in>=TODAY&&a.push([r.in,"🏨 Check-in: "+r.name,"stay",r.id]));D.event.forEach(r=>r.date>=TODAY&&a.push([r.date,"🎟 "+r.name,"event",r.id]));return a.sort((x,y)=>x[0].localeCompare(y[0]))}
+function R(){TODAY=ld();var h="";
+if(TAB==="home"){h+=today();h+=bkCard();var ds=D.dest.filter(r=>r.arrive),s=ds.map(r=>r.arrive).sort()[0],e=D.dest.map(r=>r.depart).filter(Boolean).sort().pop(),all=spendItems(),tot=sum(all),paid=sum(all.filter(x=>x.p==="Paid")),left=BUD-tot,cs=[...new Set(D.dest.map(r=>r.country).filter(Boolean))];
+h+='<div class="c"><b>Trip</b>'+(s&&e?fd(s)+" – "+fd(e)+" · "+days(s,e)+" days":'<small>Add destinations to see trip dates</small>')+'<br><small>'+(cs.join(", ")||"No countries yet")+'</small></div>';
+h+='<div class="c"><div class="row"><b>Budget</b><span>'+m(tot)+' of '+m(BUD)+'</span></div><div class="bar"><i class="'+(left<0?"x":"")+'" style="width:'+Math.min(100,tot/BUD*100)+'%"></i></div><small>'+(left<0?'<span class="warn">Over by '+m(-left)+'</span>':m(left)+" remaining")+' · '+m(paid)+' paid</small></div>';
+var u=upcoming().slice(0,6);h+='<h2>Coming up</h2>'+(u.map(x=>'<div class="c" onclick="ed(\''+x[2]+'\',\''+x[3]+'\')"><b>'+esc(x[1])+'</b><small>'+fd(x[0])+'</small></div>').join("")||'<small>Nothing scheduled yet</small>');
+var cx=D.stay.filter(r=>r.cancelBy&&r.cancelBy>=TODAY).sort((a,b)=>a.cancelBy.localeCompare(b.cancelBy)).slice(0,4);
+if(cx.length)h+='<h2>Cancellation deadlines</h2>'+cx.map(r=>'<div class="c"><b class="warn">'+fd(r.cancelBy)+'</b><small>'+esc(r.name)+'</small></div>').join("");
+var pp=[];D.stay.forEach(r=>pp.push(["stay",r]));D.trans.forEach(r=>pp.push(["trans",r]));D.event.forEach(r=>pp.push(["event",r]));
+pp=pp.filter(x=>x[1].paydate&&x[1].cost&&(x[1].pay||"Unpaid")!=="Paid"&&x[1].status!=="Cancelled").sort((a,b)=>a[1].paydate.localeCompare(b[1].paydate)).slice(0,5);
+if(pp.length)h+='<h2>Upcoming payments</h2>'+pp.map(x=>{var r=x[1],od=r.paydate<TODAY;return '<div class="c" onclick="ed(\''+x[0]+'\',\''+r.id+'\')"><div class="row"><b>'+esc(TI[x[0]](r))+'</b><span>'+m(r.cost)+'</span></div><small class="'+(od?"warn":"")+'">'+(od?"Overdue – was due ":"Due ")+fd(r.paydate)+'</small></div>'}).join("");
+var up=D.stay.concat(D.trans,D.event).filter(r=>r.cost&&(r.pay||"Unpaid")!=="Paid"&&r.status!=="Cancelled");
+if(up.length)h+='<div class="c"><b>Unpaid bookings</b><small>'+up.length+' items · '+m(sum(up.map(r=>({n:r.cost}))))+'</small></div>';
+var td=D.task.filter(r=>!r.done&&(r.pri==="High"||(r.due&&r.due<=TODAY))).slice(0,5);
+if(td.length)h+='<h2>Needs attention</h2>'+td.map(r=>'<div class="c" onclick="ed(\'task\',\''+r.id+'\')"><b>'+esc(r.name)+'</b><small class="'+(r.due&&r.due<TODAY?"warn":"")+'">'+(r.due?(r.due<TODAY?"Overdue ":"Due ")+fd(r.due):r.pri)+'</small></div>').join("");
+var wr=[];srt(D.dest,"arrive").forEach(function(r,i,a){warn(r,a[i+1]).forEach(function(w){wr.push(r.name+": "+w)})});D.stay.forEach(x=>{if(!D.dest.some(d=>d.name===x.dest))wr.push((x.name||"Stay")+": not linked to a destination")});
+if(wr.length)h+='<div class="c" onclick="go(\'plan\')"><b class="warn">⚠️ Itinerary checks ('+wr.length+')</b><small>'+wr.slice(0,5).map(esc).join('<br>')+(wr.length>5?'<br>+ '+(wr.length-5)+' more':'')+'</small></div>';
+var vs=D.visa.filter(r=>lb(r)&&lb(r)>=TODAY).sort((a,b)=>lb(a).localeCompare(lb(b))).slice(0,3);
+if(vs.length)h+='<h2>Visa deadlines</h2>'+vs.map(r=>{var dl=days(TODAY,lb(r));return '<div class="c" onclick="ed(\'visa\',\''+r.id+'\')"><b class="'+(dl<=10?'warn':'')+'">'+esc(r.country)+' – leave by '+fd(lb(r))+'</b><small>'+dl+' days left</small></div>'}).join("");
+h+=head("Key info","info")+'<small>Emergency contacts, insurance policy number and helpline, embassy details. Avoid passport numbers, as anyone who opens your phone could see them.</small><div style="height:8px"></div>'+(srt(D.info,"cat").map(r=>card("info",r)).join("")||"");
+h+='<h2>Backup &amp; share</h2><div class="c"><small>Your info is saved on this phone. To share with your partner or make a backup, export it and send it, then they import it.</small><br><br><button class="btn g" onclick="bk()">Export / Import</button></div>'}
+if(TAB==="plan"){h+=plan()}
+if(TAB==="plan0"){h+=head("Destinations","dest")+(srt(D.dest,"arrive").map(r=>{var st=D.stay.filter(x=>x.dest===r.name),ev=D.event.filter(x=>x.dest===r.name);return card("dest",r)+(st.length||ev.length?'<small style="display:block;margin:-4px 0 8px 12px">'+st.map(x=>"🏨 "+esc(x.name)).concat(ev.map(x=>"🎟 "+esc(x.name)+" ("+fd(x.date)+")")).join("<br>")+'</small>':"")}).join("")||'<small>No destinations yet</small>')+head("Events &amp; activities","event")+(srt(D.event,"date").map(r=>card("event",r)).join("")||'<small>No events yet</small>')}
+if(TAB==="travel")h+=travel();
+if(TAB==="stays"){h+=head("Stays","stay")+(srt(D.stay,"in").map(r=>card("stay",r)).join("")||'<small>No stays yet</small>')}
+if(TAB==="budget"){var a=spendItems(),t=sum(a),p=sum(a.filter(x=>x.p==="Paid"));h+='<div class="c"><div class="row"><b>Total</b><span>'+m(t)+' / '+m(BUD)+'</span></div><div class="bar"><i class="'+(t>BUD?"x":"")+'" style="width:'+Math.min(100,t/BUD*100)+'%"></i></div><small>Remaining '+m(BUD-t)+' · Paid '+m(p)+' · Unpaid '+m(t-p)+' · '+m(BUD/2)+' each</small></div>';
+h+='<small>Journeys, stays and events count automatically from their own cost. Only add expenses here for other spending, so nothing is counted twice.</small>';
+h+='<h2>By category</h2>'+bars(grp(a,"c"),t)+'<h2>By country</h2>'+bars(grp(a,"ct"),t);
+var ex=a.filter(x=>x.w);h+='<h2>Manual spending by person</h2>'+bars(grp(ex,"w"),sum(ex))+head("Expenses","exp")+(srt(D.exp,"date").reverse().map(r=>card("exp",r)).join("")||'<small>No expenses yet</small>')}
+if(TAB==="todo"){h+=head("Visa &amp; entry tracker","visa")+(srt(D.visa,"entry").map(r=>card("visa",r)).join("")||'<small>Add each country with your entry date and days allowed to get a countdown</small>');var n=D.task.filter(r=>r.done).length,T=D.task.length;h+='<div class="c"><b>'+(T?Math.round(n/T*100):0)+'% complete</b><div class="bar"><i style="width:'+(T?n/T*100:0)+'%"></i></div><small>'+n+' of '+T+' tasks</small></div><div style="text-align:right"><button class="btn" onclick="ed(\'task\')">+ Add task</button></div>';
+TC.concat([...new Set(D.task.map(r=>r.cat).filter(c=>c&&TC.indexOf(c)<0))]).forEach(c=>{var l=D.task.filter(r=>r.cat===c);if(!l.length)return;var d=l.filter(r=>r.done).length;h+='<h2>'+esc(c)+'<small>'+d+'/'+l.length+'</small></h2>'+l.map(r=>'<div class="c chk"><input type="checkbox" '+(r.done?"checked":"")+' onchange="tg(\''+r.id+'\')"><div onclick="ed(\'task\',\''+r.id+'\')" style="flex:1"><span class="'+(r.done?"done":"")+'">'+esc(r.name)+'</span><br><small class="'+(!r.done&&r.due&&r.due<TODAY?"warn":"")+'">'+esc([r.due&&(r.due<TODAY&&!r.done?"Overdue ":"Due ")+fd(r.due),r.pri,r.who,r.dest].filter(Boolean).join(" · "))+'</small></div></div>').join("")})}
+document.getElementById("v").innerHTML=h;
+document.getElementById("n").innerHTML=[["home","🏠","Home"],["plan","🗺","Itinerary"],["travel","✈️","Travel"],["stays","🏨","Stays"],["budget","💷","Budget"],["todo","✅","To-do"]].map(x=>'<button class="'+(TAB===x[0]?"on":"")+'" onclick="go(\''+x[0]+'\')"><span>'+x[1]+'</span>'+x[2]+'</button>').join("")}
+function bkCard(){if(!(D.dest.length||D.stay.length||D.trans.length))return"";var bd=D.lastBk?Math.floor((Date.now()-D.lastBk)/864e5):null,old=bd==null||bd>=7;
+return '<div class="c" onclick="bk()"><b class="'+(old?"warn":"")+'">'+(bd==null?"⚠️ No backup yet":old?"⚠️ Last backup "+bd+" days ago":"✓ Backed up "+(bd?bd+" days ago":"today"))+'</b><small>'+(old?"Tap to export a copy and save it in Notes":"Tap to back up again")+'</small></div>'}
+function today(){var cur=D.dest.find(r=>r.arrive&&r.depart&&r.arrive<=TODAY&&TODAY<r.depart)||D.dest.find(r=>r.depart===TODAY&&r.arrive);
+if(!cur){var nx=srt(D.dest.filter(r=>r.arrive&&r.arrive>TODAY),"arrive")[0];return nx&&!D.dest.some(r=>r.arrive&&r.arrive<TODAY)?'<div class="c"><b>✈️ Next stop: '+esc(nx.name)+'</b><small>in '+days(TODAY,nx.arrive)+' days ('+fd(nx.arrive)+')</small></div>':""}
+var h='<div class="c" style="border-left:5px solid var(--terra)"><b style="font-size:18px">Today: '+esc(cur.name)+'</b><small>'+esc(cur.country||"")+' · '+fd(cur.arrive)+' – '+fd(cur.depart)+' · '+days(TODAY,cur.depart)+' nights left</small>';
+var st=D.stay.filter(x=>x.dest===cur.name&&x.in&&x.in<=TODAY&&TODAY<=(x.out||TODAY));
+st.forEach(function(x){h+='<div class="sub"><b>🏨 '+esc(x.name)+'</b><small>'+(x.ref?'Ref '+esc(x.ref)+' · ':'')+'Check-out '+(fd(x.out)||'–')+(x.link?' · <a href="'+esc(x.link)+'" target="_blank">Booking</a>':'')+'</small></div>'});
+srt(D.event.filter(x=>x.date===TODAY),"start").forEach(function(x){h+='<div class="sub"><b>🎟 '+esc(x.name)+'</b><small>'+esc([x.start&&x.start+(x.end?'–'+x.end:''),x.loc,x.ref&&'Ref '+x.ref].filter(Boolean).join(' · '))+'</small></div>'});
+var tr=srt(D.trans.filter(t=>t.date>=TODAY&&t.status!=="Cancelled"),"date")[0];
+if(tr)h+='<div class="sub"><b>Next journey: '+esc(TI.trans(tr))+'</b><small>'+esc([fd(tr.date),tr.type,tr.dep&&tr.dep+(tr.arr?'–'+tr.arr:''),tr.ref&&'Ref '+tr.ref].filter(Boolean).join(' · '))+'</small></div>';
+return h+'</div>'}
+function srch(){op('<h2>Search</h2><input id="q" placeholder="Hotel, booking ref, note…" oninput="sr()"><div id="qr" style="margin-top:10px"></div><div style="margin-top:12px"><button class="btn o" onclick="cl()">Close</button></div>');setTimeout(function(){document.getElementById("q").focus()},60)}
+function sr(){var q=document.getElementById("q").value.trim().toLowerCase(),o="";if(q.length>1)["dest","stay","trans","event","opt","exp","task","visa","info"].forEach(function(k){D[k].forEach(function(r){var txt=Object.keys(r).filter(x=>["id","u","tid","done"].indexOf(x)<0).map(x=>r[x]).join(" ").toLowerCase();if(txt.indexOf(q)>-1)o+='<div class="c" onclick="ed(\''+k+'\',\''+r.id+'\')"><small>'+S[k].t+'</small><b>'+esc(TI[k](r))+'</b><small>'+esc(SU[k](r))+'</small></div>'})});document.getElementById("qr").innerHTML=o||(q.length>1?'<small>Nothing found</small>':"")}
+function undo(){if(!UD)return;var r=UD.r;delete D.del[r.id];r.u=Date.now();D[UD.k].push(r);save();UD=null;document.getElementById("t").style.display="none";R()}
+function lb(r){if(!r.entry||!r.days)return"";var d=new Date(r.entry+"T12:00");d.setDate(d.getDate()+(+r.days)-1);return d.toISOString().slice(0,10)}
+function chosen(x){return x.tid&&D.trans.some(t=>t.id===x.tid)}
+function pick(oid){var x=D.opt.find(o=>o.id===oid),d=D.dest.find(q=>q.name===x.dest),mp={"Speedboat":"Ferry/boat","Sleeper train":"Train","Other":"Private transfer"},t={id:id(),type:mp[x.type]||x.type,from:x.dest,to:x.to,date:d&&d.depart||"",dur:x.dur,cost:x.est,pay:"Unpaid",status:"Unbooked",notes:x.notes||"",link:x.link||""};t.u=x.u=Date.now();D.trans.push(t);x.tid=t.id;save();R();ed("trans",t.id)}
+function warn(r,nx){var w=[];if(!r.arrive||!r.depart)return w;var n=nn(r),st=D.stay.filter(x=>x.dest===r.name&&x.in&&x.out);
+if(n>0){if(!D.stay.some(x=>x.dest===r.name))w.push("No hotel added yet");else{var miss=[];for(var i=0;i<n;i++){var dt=new Date(r.arrive+"T12:00");dt.setDate(dt.getDate()+i);var s=dt.toISOString().slice(0,10);if(!st.some(x=>x.in<=s&&s<x.out))miss.push(s)}
+if(miss.length)w.push(miss.length+" night"+(miss.length>1?"s":"")+" with no hotel (from "+fd(miss[0])+")")}}
+st.forEach(x=>{if(x.out>r.depart)w.push(x.name+": checkout "+fd(x.out)+" is after you leave ("+fd(r.depart)+")");if(x.in<r.arrive)w.push(x.name+": check-in "+fd(x.in)+" is before you arrive")});
+if(nx&&nx.arrive&&nx.arrive!==r.depart)w.push("You leave "+fd(r.depart)+" but "+nx.name+" starts "+fd(nx.arrive));return w}
+function plan(){var h='<div class="row" style="margin:8px 0"><small>Everything for each stop in one place</small><button class="btn" onclick="ed(\'dest\')">+ Destination</button></div>';
+var SD=srt(D.dest,"arrive");SD.forEach(function(r,ix){var nx=SD[ix+1],st=D.stay.filter(x=>x.dest===r.name),ev=D.event.filter(x=>x.dest===r.name),op=D.opt.filter(x=>x.dest===r.name),d=r.id;
+h+='<div class="c" style="border-left:5px solid var(--sage)"><div class="row" onclick="ed(\'dest\',\''+d+'\')"><b style="font-size:18px">'+esc(r.name||"Destination")+'</b><small>'+esc(r.country||"")+' ✎</small></div><small>'+fd(r.arrive)+' – '+fd(r.depart)+(nn(r)?' · '+nn(r)+' nights':'')+'</small>';
+warn(r,nx).forEach(function(w){h+='<div class="warn" style="font-size:13px;margin-top:4px">⚠️ '+esc(w)+'</div>'});
+h+='<h3>Hotel</h3>'+(st.map(x=>'<div class="sub" onclick="ed(\'stay\',\''+x.id+'\')"><b>'+esc(x.name)+'</b><small>Cost: '+(x.cost?m(x.cost)+' ('+(x.pay||"Unpaid")+') · counts in budget':'–')+'<br>Cancellation deadline: '+(fd(x.cancelBy)||'–')+'<br>Payment date: '+(fd(x.paydate)||'–')+'</small></div>').join("")||'<small>No hotel yet</small>')+'<div style="margin-top:6px"><button class="btn g" onclick="add(\'stay\',\''+d+'\')">+ Hotel</button></div>';
+h+='<h3>Travel options onward <small>(estimates, not in budget)</small></h3>'+(op.map(optCard).join("")||'<small>No options yet</small>')+'<div style="margin-top:6px"><button class="btn g" onclick="add(\'opt\',\''+d+'\')">+ Travel option</button></div>';
+h+='<h3>Activities</h3>'+(ev.map(x=>'<div class="sub" onclick="ed(\'event\',\''+x.id+'\')"><b>'+esc(x.name)+'</b><small>'+esc(SU.event(x))+'</small></div>').join("")||'<small>None yet</small>')+'<div style="margin-top:6px"><button class="btn g" onclick="add(\'event\',\''+d+'\')">+ Activity</button></div></div>'});
+return h}
+function add(k,did){var x=D.dest.find(y=>y.id===did),pre={dest:x?x.name:""};if(k==="opt"&&x){var SD=srt(D.dest,"arrive"),nx=SD[SD.indexOf(x)+1];if(nx)pre.to=nx.name}ed(k,"",pre)}
+function optCard(x){return '<div class="sub" onclick="ed(\'opt\',\''+x.id+'\')"><b>'+esc(x.type||"Option")+(x.to?' to '+esc(x.to):'')+'</b><small>'+esc([x.dur,x.est&&'est. '+m(x.est)].filter(Boolean).join(' · '))+(x.notes?'<br>'+esc(x.notes):'')+(x.link?'<br><a href="'+esc(x.link)+'" target="_blank" onclick="event.stopPropagation()">Open link</a>':'')+'</small><div style="margin-top:4px">'+(chosen(x)?'<small style="color:var(--olive);font-weight:600">✓ Chosen – in your journeys</small>':'<button class="btn o" style="padding:4px 10px;font-size:13px" onclick="event.stopPropagation();pick(\''+x.id+'\')">Choose this option</button>')+'</div></div>'}
+function travel(){var h='<h2>Travel options</h2><small>Compare ways to get between stops. Estimates here don’t count towards your budget until you choose one.</small>';
+var SD=srt(D.dest,"arrive"),shown={};
+SD.forEach(function(r,ix){var nx=SD[ix+1],op=D.opt.filter(x=>x.dest===r.name);op.forEach(function(x){shown[x.id]=1});
+h+='<div class="c" style="margin-top:8px"><b>'+esc(r.name)+(nx?' → '+esc(nx.name):'')+'</b><small>'+(r.depart?'Leave '+fd(r.depart):'')+'</small>'+(op.map(optCard).join("")||'<div class="sub"><small>No options yet</small></div>')+'<div style="margin-top:6px"><button class="btn g" onclick="add(\'opt\',\''+r.id+'\')">+ Add travel option</button></div></div>'});
+var oth=D.opt.filter(x=>!shown[x.id]);if(oth.length)h+='<h2>Other options</h2><div class="c">'+oth.map(optCard).join("")+'</div>';
+h+=head("Chosen &amp; booked journeys","trans")+'<small>These count towards your budget.</small><div style="height:6px"></div>'+(srt(D.trans,"date").map(r=>card("trans",r)).join("")||'<small>None yet. Choose an option above or add a journey.</small>');return h}
+function go(t){TAB=t;R();scrollTo(0,0)}
+function tg(i){var r=D.task.find(x=>x.id===i);r.done=!r.done;r.u=Date.now();save();R()}
+function ed(k,i,pre){var r=i?D[k].find(x=>x.id===i):(pre||{}),h='<h2>'+(i?"Edit ":"Add ")+S[k].t+'</h2><datalist id="dl">'+D.dest.map(x=>'<option value="'+esc(x.name)+'">').join("")+'</datalist>';
+S[k].f.forEach(f=>{var v=r[f[0]]==null?"":r[f[0]],t=f[2]||"text";h+='<label>'+f[1]+'</label>';
+if(t==="sel")h+='<select id="f_'+f[0]+'">'+f[3].map(o=>'<option'+(o===v?" selected":"")+'>'+o+'</option>').join("")+'</select>';
+else if(t==="area")h+='<textarea id="f_'+f[0]+'" rows="3">'+esc(v)+'</textarea>';
+else h+='<input id="f_'+f[0]+'" type="'+(t==="dest"?"text":t)+'"'+(t==="dest"?' list="dl"':"")+(t==="number"?' inputmode="decimal"':"")+' value="'+esc(v)+'">'});
+h+='<div class="row" style="margin-top:16px"><button class="btn g" onclick="sv(\''+k+'\',\''+(i||"")+'\')">Save</button><button class="btn o" onclick="cl()">Cancel</button>'+(i?'<button class="btn o" onclick="rm(\''+k+'\',\''+i+'\')">Delete</button>':"")+'</div>';op(h)}
+function op(h){document.getElementById("mb").innerHTML=h;document.getElementById("m").style.display="flex"}
+function cl(){document.getElementById("m").style.display="none"}
+function sv(k,i){var r=i?D[k].find(x=>x.id===i):{id:id()},on=r.name;S[k].f.forEach(f=>r[f[0]]=document.getElementById("f_"+f[0]).value);r.u=Date.now();if(k==="dest"&&i&&on&&on!==r.name){["stay","event","opt"].forEach(function(c){D[c].forEach(function(z){if(z.dest===on){z.dest=r.name;z.u=Date.now()}})})}if(!i)D[k].push(r);save();cl();R()}
+function rm(k,i){var r=D[k].find(x=>x.id===i);if(!r)return;D[k]=D[k].filter(x=>x.id!==i);D.del[i]=Date.now();save();cl();R();UD={k:k,r:r};var t=document.getElementById("t");t.innerHTML='Deleted <b onclick="undo()">Undo</b>';t.style.display="block";clearTimeout(UT);UT=setTimeout(function(){t.style.display="none";UD=null},10000)}
+function bk(){op('<h2>Export / Import</h2><small>Export: copy the text below and send it (Messages, email, Notes). Import: paste your partner’s text here and tap Import. Importing merges with what is on this phone, so you keep both sets of changes. If you both edited the same entry, the most recent edit wins.</small><textarea id="bx" rows="8">'+esc(JSON.stringify(D))+'</textarea><div class="row" style="margin-top:12px"><button class="btn g" onclick="cp()">Copy</button><button class="btn" onclick="im()">Import</button><button class="btn o" onclick="cl()">Close</button></div>')}
+function cp(){var t=document.getElementById("bx");t.select();try{navigator.clipboard.writeText(t.value)}catch(e){document.execCommand("copy")}D.lastBk=Date.now();save();R();alert("Copied. Now paste it somewhere safe, like Notes or a message to yourself.")}
+function im(){try{var x=JSON.parse(document.getElementById("bx").value);if(!x.dest||!x.task)throw 0;merge(x);save();cl();R();alert("Merged. Both sets of changes are now on this phone.")}catch(e){alert("That doesn’t look like Travel Packer data.")}}
+load();mig();R();
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(function(){})}
+</script></body></html>
